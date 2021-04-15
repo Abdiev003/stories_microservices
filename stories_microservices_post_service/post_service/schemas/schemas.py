@@ -37,6 +37,13 @@ class RecipeSchema(ma.SQLAlchemyAutoSchema):
             'owner_id',
         )
 
+    @validates('category_id')
+    def validate_category_id(self, category_id):
+        category = Category.query.filter_by(id=category_id).first()
+        if not category:
+            raise ValidationError("Category not found")
+
+
     def get_owner(self, recipe):
         return UserSchema().dump(recipe.owner)
 
