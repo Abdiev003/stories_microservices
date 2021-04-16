@@ -58,6 +58,16 @@ def login():
         return jsonify({'message': 'Bad username or password'}), HTTPStatus.UNAUTHORIZED
 
 
+@app.route('/user-profile/', methods=["GET"])
+@jwt_required()
+def user_profile():
+    user_id = get_jwt_identity()
+    user = User.query.filter_by(id=user_id).first()
+    if not user:
+        return jsonify({'message': 'Not found'}), HTTPStatus.UNAUTHORIZED
+    return UserSchema().jsonify(user), HTTPStatus.OK
+
+
 @app.route("/protected/", methods=["GET"])
 @jwt_required()
 def protected():
