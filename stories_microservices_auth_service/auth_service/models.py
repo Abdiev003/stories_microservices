@@ -1,9 +1,13 @@
 from sqlalchemy.sql import func
 from flask_login import UserMixin
 
-from .config.extensions import db
+from .config.extensions import db, login_manager
 from werkzeug.security import generate_password_hash
 
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.get(user_id)
 
 class SaveMixin(object):
     id = db.Column(db.Integer, primary_key=True)

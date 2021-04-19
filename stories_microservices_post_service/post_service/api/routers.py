@@ -2,6 +2,7 @@ from http import HTTPStatus
 
 from flask import send_from_directory, request, jsonify, session
 from marshmallow import ValidationError
+from flasgger import swag_from
 
 from ..config.extensions import MEDIA_ROOT, db
 from ..utils.commons import save_file
@@ -18,6 +19,8 @@ def uploaded_file(filename):
 
 
 @app.route('/recipes/', methods=['GET', 'POST'])
+@swag_from('docs/get_all_recipes.yml', methods=['GET',])
+@swag_from('docs/create_recipe.yml', methods=['POST',])
 def recipes():
     if request.method == 'POST':
         try:
@@ -34,37 +37,35 @@ def recipes():
     return RecipeSchema(many=True).jsonify(recipes), HTTPStatus.OK
 
 
-@app.route('/recipes/<int:recipe_id>/', methods=['GET', 'PATCH', 'DELETE'])
+@app.route('/recipes/<int:recipe_id>/', methods=['GET', 'PUT', 'PATCH', 'DELETE'])
 def recipe_detail(recipe_id):
-    if request.method == 'PATCH':
-        title = request.json.get('title')
-        short_description = request.json.get('short_description')
-        description = request.json.get('description')
-        category = request.json.get('category')
-        image = request.files.get('image')
-        recipe = Recipe.query.filter_by(id=recipe_id).first()
+    recipe = Recipe.query.filter_by(id=recipe_id).first()
+    if not recipe:
+        return jsonify({'message': 'Not found'}), HTTPStatus.NOT_FOUND
 
-        if title:
-            recipe.title = title
-            recipe.slug = slugify(title)
-        if short_description:
-            recipe.short_description = short_description
-        if description:
-            recipe.description = description
-        if category:
-            recipe.category_id = category
-        if image:
-            recipe.image = image
-        db.session.add(recipe)
-        db.session.commit()
+    if request.method == 'DELETE':
+        recipe.delete()
+        return jsonify({}), HTTPStatus.NO_CONTENT
+
+    if request.method == 'GET':
         return RecipeSchema().jsonify(recipe), HTTPStatus.OK
 
-    elif request.method == 'DELETE':
-        recipe = Recipe.query.filter_by(id=recipe_id).first()
-        recipe.delete()
-        return jsonify({'message': 'success'}), HTTPStatus.NO_CONTENT
+    try:
+        data = request.json or request.form
+        title = data.get('title')
+        image = request.files.get('image')
+        serializer = RecipeSchema()
+        if request.method == 'PUT':
+            recipe_serializer = serializer.load(data, instance=recipe)
+        elif request.method == 'PATCH':
+            recipe_serializer = serializer.load(data, instance=recipe, partial=True)
+        recipe.owner_id = 1
+        if title:
+            recipe.slug = slugify(title)
+        if image:
+            recipe.image = save_file(image)
+        recipe_serializer.save()
+        return RecipeSchema().jsonify(recipe), HTTPStatus.OK
+    except ValidationError as err:
+        return jsonify(err.messages), HTTPStatus.BAD_REQUEST
 
-    recipe = Recipe.query.filter_by(id=recipe_id, is_published=True).first()
-    if not recipe:
-        return jsonify({'detail': 'Not found'})
-    return RecipeSchema().jsonify(recipe), HTTPStatus.OK

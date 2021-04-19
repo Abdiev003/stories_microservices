@@ -1,0 +1,65 @@
+Register
+This endpoint for registration
+---
+tags:
+  - auth
+
+definitions:
+  Register:
+    type: object
+    properties:
+      first_name:
+        type: string
+        description: Get First Name
+        default: ""
+      last_name:
+        type: string
+        description: Get Last Name
+        default: ""
+      email:
+        type: string
+        description: Get Email
+        format: email
+        default: ""
+      password:    
+        type: string
+        description: Get Password
+        writeOnly: true
+        default: ""
+      image:
+        type: string
+        description: Get Image
+        format: byte
+      created_at:
+        type: string
+        readOnly: true
+        format: datetime
+        description: Get created_at
+      updated_at:
+        type: string
+        readOnly: true
+        format: datetime
+        description: Get updated_at
+
+consumes:
+ - "multipart/form-data"
+produces:
+ - "application/json"
+ - "multipart/form-data"
+
+parameters:
+  - name: data
+    in: body
+    schema:
+      $ref: '#/definitions/Register'
+
+responses:
+  201:
+    description: create register data
+    schema:
+      $ref: '#/definitions/Register'
+    examples:
+      $ref: '#/definitions/Register'
+
+  400:
+    description: Bad Request

@@ -4,6 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
 from flask_marshmallow import Marshmallow
+from flasgger import Swagger
 
 from ..app import app
 
@@ -19,3 +20,4 @@ db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 login_manager = LoginManager(app)
 ma = Marshmallow(app)
+swagger = Swagger(app)

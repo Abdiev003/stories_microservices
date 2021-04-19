@@ -2,6 +2,8 @@ from http import HTTPStatus
 
 from flask import send_from_directory, request, jsonify, session
 from marshmallow import ValidationError
+from flasgger import swag_from
+
 
 from ..config.extensions import MEDIA_ROOT, db
 from ..models import User
@@ -25,6 +27,7 @@ def uploaded_file(filename):
 
 
 @app.route('/register/', methods=['POST'])
+@swag_from('docs/register.yml')
 def register():
     try:
         data = dict(request.json or request.form)
@@ -52,7 +55,6 @@ def login():
             'access_token': access_token,
             'refresh_token': refresh_token
         })
-        # user = UserSchema().load(data)
         return jsonify(user), HTTPStatus.OK
     else:
         return jsonify({'message': 'Bad username or password'}), HTTPStatus.UNAUTHORIZED
