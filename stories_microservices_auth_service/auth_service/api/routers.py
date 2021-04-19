@@ -42,6 +42,7 @@ def register():
 
 
 @app.route("/login/", methods=["POST"])
+@swag_from('docs/login.yml')
 def login():
     data = dict(request.json or request.form)
     email = data.get('email')

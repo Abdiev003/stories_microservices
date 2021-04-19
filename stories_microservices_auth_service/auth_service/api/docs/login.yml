@@ -1,0 +1,44 @@
+Login
+This endpoint for login
+---
+tags:
+  - auth
+
+definitions:
+  Login:
+    type: object
+    properties:
+      email:
+        type: string
+        description: Get Email
+        format: email
+        default: ""
+      password:    
+        type: string
+        description: Get Password
+        writeOnly: true
+        default: ""
+
+consumes:
+ - "multipart/form-data"
+produces:
+ - "application/json"
+ - "multipart/form-data"
+
+parameters:
+  - name: data
+    in: body
+    schema:
+      $ref: '#/definitions/Login'
+
+responses:
+  201:
+    description: login data
+    
+    schema:
+      $ref: '#/definitions/Login'
+    examples:
+      $ref: '#/definitions/Login'
+
+  400:
+    description: Bad Request
