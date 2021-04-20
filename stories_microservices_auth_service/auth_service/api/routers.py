@@ -9,6 +9,7 @@ from ..config.extensions import MEDIA_ROOT, db
 from ..models import User
 from ..schemas.schemas import UserSchema
 from ..utils.commons import save_file
+from ..utils.tokens import confirm_token
 from werkzeug.security import check_password_hash
 
 from flask_jwt_extended import (
@@ -36,9 +37,27 @@ def register():
         if image:
             user.image = save_file(image)
         user.save()
+        user.send_confirmation_mail()
         return UserSchema().jsonify(user), HTTPStatus.CREATED
     except ValidationError as err:
         return jsonify(err.messages), HTTPStatus.BAD_REQUEST
+
+
+@app.route('/confirm/<token>')
+def confirm_email(token):
+    email = confirm_token(token)
+    if not email:
+        return jsonify({'message': 'The confirmation link is invalid or has expired.'}), HTTPStatus.OK
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        return jsonify({'message': 'Account not found'}), HTTPStatus.OK
+    print('is active', user.is_active)
+    if user.is_active:
+        return jsonify({'message': 'Account already confirmed. Please login.'}), HTTPStatus.OK
+    else:
+        user.is_active = True
+        user.save()
+        return jsonify({'message': 'You have confirmed your account. Thanks!'}), HTTPStatus.OK
 
 
 @app.route("/login/", methods=["POST"])
@@ -49,9 +68,11 @@ def login():
     password = data.get('password')
     user = User.query.filter_by(email=email).first()
     if user and check_password_hash(user.password, password):
-        access_token = create_access_token(identity=user.id)
-        refresh_token = create_refresh_token(identity=user.id)
+        if not user.is_active:
+            return jsonify({'message': 'Please confirm your account'}), HTTPStatus.OK
         user = UserSchema().dump(user)
+        access_token = create_access_token(identity=user['id'])
+        refresh_token = create_refresh_token(identity=user['id'])
         user.update({
             'access_token': access_token,
             'refresh_token': refresh_token

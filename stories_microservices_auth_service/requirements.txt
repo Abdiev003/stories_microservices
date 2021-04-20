@@ -30,6 +30,7 @@ python-dateutil==2.8.1
 python-editor==1.0.4
 python-slugify==4.0.1
 PyYAML==5.4.1
+redis==3.5.3
 six==1.15.0
 SQLAlchemy==1.4.7
 text-unidecode==1.3
