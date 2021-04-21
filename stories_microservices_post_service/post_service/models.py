@@ -2,6 +2,7 @@ from sqlalchemy.sql import func
 from slugify import slugify
 from flask_login import UserMixin
 
+from .cache import SaveCache
 from .config.extensions import db, login_manager
 
 
@@ -121,3 +122,12 @@ class Recipe(SaveMixin, db.Model):
         owner = User.query.filter_by(id=owner_id).first()
         self.owner_id = owner
         self.is_published = is_published
+
+    def save(self):
+        super().save()
+        new_recipe_data = self.to_dict()
+        SaveCache(new_post=new_recipe_data)
+
+    def to_dict(self):
+        from .schemas.schemas import RecipeSchema
+        return RecipeSchema().dumps(self)

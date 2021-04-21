@@ -3,9 +3,7 @@ import redis
 
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-from flask_login import LoginManager
 from flask_marshmallow import Marshmallow
-from flasgger import Swagger
 
 from ..app import app
 
@@ -24,11 +22,10 @@ class RedisConfig:
         return redis.Redis(host=self.HOST, port=self.PORT, password=self.PASSWORD, db=0)
 
 
-app.config["SQLALCHEMY_DATABASE_URI"] = 'postgresql://db_user:123@127.0.0.1:5432/db_name'
+app.config["SQLALCHEMY_DATABASE_URI"] = 'postgresql://db_user:123@127.0.0.1:5434/db_name'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
+app.config['CELERY_BROKER_URL'] = "redis://:1234@localhost:6379/0"
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
-login_manager = LoginManager(app)
 ma = Marshmallow(app)
-swagger = Swagger(app)
